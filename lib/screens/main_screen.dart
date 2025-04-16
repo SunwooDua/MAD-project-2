@@ -12,6 +12,8 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final TextEditingController _locationController = TextEditingController();
   String location = '';
+  String longitude = '';
+  String latitude = '';
 
   Future<void> _getCurrentPosition() async {
     LocationPermission permission =
@@ -21,7 +23,11 @@ class _MainScreenState extends State<MainScreen> {
           await Geolocator.requestPermission(); // if no permission ask for permission
     }
 
-    Position position = await Geolocator.getCurrentPosition();
+    Position position = await Geolocator.getCurrentPosition(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ), // make it more accurate
+    );
 
     // convert locations into placemarks
     List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -38,6 +44,28 @@ class _MainScreenState extends State<MainScreen> {
 
     setState(() {
       location = '$city, $state, $country'; // update location
+    });
+  }
+
+  Future<void> _convertAddress(String address) async {
+    List<Location> locations = await locationFromAddress(address);
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+      locations[0].latitude,
+      locations[0].longitude,
+    );
+
+    // choose first of placemark
+    Placemark place = placemarks[0];
+    // if null give empty
+    String city = place.locality ?? '';
+    String state = place.administrativeArea ?? '';
+    String country = place.country ?? '';
+
+    setState(() {
+      location = '$city, $state, $country'; // update location
+      // since we captured address need to update lat and longt
+      latitude = locations[0].latitude.toString();
+      longitude = locations[0].longitude.toString();
     });
   }
 
@@ -67,7 +95,8 @@ class _MainScreenState extends State<MainScreen> {
                   onPressed: () {
                     //update location manually when push button
                     setState(() {
-                      location = _locationController.text;
+                      final address = _locationController.text;
+                      _convertAddress(address);
                     });
                   },
                   icon: Icon(Icons.add_location),
