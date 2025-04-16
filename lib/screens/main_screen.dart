@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -10,6 +12,34 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final TextEditingController _locationController = TextEditingController();
   String location = '';
+
+  Future<void> _getCurrentPosition() async {
+    LocationPermission permission =
+        await Geolocator.checkPermission(); // check permission
+    if (permission == LocationPermission.denied) {
+      permission =
+          await Geolocator.requestPermission(); // if no permission ask for permission
+    }
+
+    Position position = await Geolocator.getCurrentPosition();
+
+    // convert locations into placemarks
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
+
+    // choose first of placemark
+    Placemark place = placemarks[0];
+    // if null give empty
+    String city = place.locality ?? '';
+    String state = place.administrativeArea ?? '';
+    String country = place.country ?? '';
+
+    setState(() {
+      location = '$city, $state, $country'; // update location
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +77,7 @@ class _MainScreenState extends State<MainScreen> {
             SizedBox(height: 20),
             Center(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _getCurrentPosition,
                 child: Text('Auto-detect Location'),
               ),
             ),
