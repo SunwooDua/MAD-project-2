@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:project2/screens/forecast_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -109,6 +110,25 @@ class _MainScreenState extends State<MainScreen> {
                 onPressed: _getCurrentPosition,
                 child: Text('Auto-detect Location'),
               ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                if (latitude.isNotEmpty && longitude.isNotEmpty) {
+                  //pass longitude and latitude
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => ForecastScreen(
+                            latitude: latitude,
+                            longitude: longitude,
+                          ),
+                    ),
+                  );
+                }
+              },
+              child: Text('Forecast'),
             ),
           ],
         ),
