@@ -6,10 +6,12 @@ class WeatherService {
   final String API_KEY = 'f276def9aa8fec1dab67ecf5b3b84378';
   final String baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
 
-  Future<Weather> fetchWeather(String location) async {
+  Future<Weather> fetchWeather(double latitude, double longitude) async {
     // from inclass 15
     final response = await http.get(
-      Uri.parse('$baseUrl?q=$location&appid=$API_KEY&units=metric'),
+      Uri.parse(
+        '$baseUrl?lat=$latitude&lon=$longitude&appid=$API_KEY&units=metric',
+      ),
     );
 
     if (response.statusCode == 200) {

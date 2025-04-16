@@ -45,6 +45,9 @@ class _MainScreenState extends State<MainScreen> {
 
     setState(() {
       location = '$city, $state, $country'; // update location
+      // pass latitude and longitude
+      latitude = position.latitude.toString();
+      longitude = position.longitude.toString();
     });
   }
 
