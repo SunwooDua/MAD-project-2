@@ -18,20 +18,20 @@ class ForecastScreen extends StatefulWidget {
 
 class _ForecastScreenState extends State<ForecastScreen> {
   final _weatherService = WeatherService();
-  Weather? _weather; // save weather model in _weather
+  List<Weather> hourlyForecast = [];
 
   // fetch weather
   _fetchWeather() async {
     try {
-      // get weather info
-      final weather = await _weatherService.fetchWeather(
+      // get weather info for hourly forecast
+      final hourly = await _weatherService.fetchWeatherHourly(
         double.parse(widget.latitude),
         double.parse(widget.longitude),
       );
 
       setState(() {
         // update weather
-        _weather = weather;
+        hourlyForecast = hourly;
       });
     } catch (e) {
       print(e); // handle error
@@ -51,10 +51,28 @@ class _ForecastScreenState extends State<ForecastScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Temperature: ${_weather?.temperature}℃'),
-            Text('Humidity: ${_weather?.humidity}%'),
-            Text('Condition: ${_weather?.condition}'),
-            Text('Wind Speed: ${_weather?.windSpeed} m/s'),
+            Expanded(
+              child: ListView.builder(
+                itemCount: hourlyForecast.length.clamp(
+                  0,
+                  24,
+                ), // limit to one day
+                itemBuilder: (context, index) {
+                  final weather = hourlyForecast[index];
+                  return Card(
+                    child: Container(
+                      child: Column(
+                        children: [
+                          Text('${weather.time?.hour}:00'),
+                          Text('${weather.temperature}°C'),
+                          Text(weather.condition),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
