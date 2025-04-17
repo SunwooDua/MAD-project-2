@@ -126,6 +126,7 @@ class _MainScreenState extends State<MainScreen> {
                           (context) => ForecastScreen(
                             latitude: latitude,
                             longitude: longitude,
+                            locationName: location,
                           ),
                     ),
                   );

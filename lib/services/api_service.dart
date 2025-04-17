@@ -36,4 +36,44 @@ class WeatherService {
       throw Exception('Failed to load hourly weather');
     }
   }
+
+  // for daily forecast
+  Future<List<Weather>> fetchWeatherDaily(
+    double latitude,
+    double longitude,
+  ) async {
+    // from inclass 15
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl?lat=$latitude&lon=$longitude&appid=$API_KEY&units=metric',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      final List<dynamic> forecastList =
+          data['list']; // 3 hour interval 5 day = total 40 items
+
+      Map<String, Weather> dailyForecast = {};
+
+      for (var item in forecastList) {
+        // loop for every variable
+        final weather = Weather.fromHourlyJson(
+          item,
+        ); // save weather data using hourly
+        final dateKey =
+            '${weather.time?.year}-${weather.time?.month}-${weather.time?.day}'; // separate by date
+
+        // if no date exist, add weather
+        if (!dailyForecast.containsKey(dateKey)) {
+          dailyForecast[dateKey] = weather;
+        }
+      }
+
+      return dailyForecast.values.toList();
+    } else {
+      throw Exception("Failed to load daily weather : ${response.body}");
+    }
+  }
 }
