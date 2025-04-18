@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:project2/screens/forecast_screen.dart';
+import 'package:project2/screens/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -143,6 +144,18 @@ class _MainScreenState extends State<MainScreen> {
                   }
                 },
                 child: Text('Forecast'),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity, // as wide as possible
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SettingsScreen()),
+                  );
+                },
+                child: Text('Settings'),
               ),
             ),
           ],
