@@ -22,6 +22,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
   final _weatherService = WeatherService();
   List<Weather> hourlyForecast = [];
   List<Weather> dailyForecast = [];
+  bool showHourly = true; // default is to show hourly forecast
 
   // fetch weather
   _fetchWeather() async {
@@ -94,68 +95,90 @@ class _ForecastScreenState extends State<ForecastScreen> {
     return Scaffold(
       appBar: AppBar(title: Text("Forecast")),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Location : ${widget.locationName}'),
-            Text(
-              'Hourly Forecast : ${DateTime.now().toLocal().toString().split(' ')[0]}', // only show date no time
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: hourlyForecast.length,
-                itemBuilder: (context, index) {
-                  final weather = hourlyForecast[index];
-                  return Card(
-                    child: Container(
-                      child: Column(
-                        children: [
-                          Text('${weather.time?.hour}:00'),
-                          Text('${weather.temperature}°C'),
-                          Text(weather.condition),
-                          Image.asset(
-                            // contain image
-                            getWeatherImages(weather.condition),
-                            width: 30,
-                            height: 30,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Location : ${widget.locationName}'),
+              Text(
+                '${showHourly ? "Hourly" : "Daily"} Forecast : ${DateTime.now().toLocal().toString().split(' ')[0]}', // only show date no time
               ),
-            ),
-            Divider(),
-            Text("Daily"),
-            Expanded(
-              child: ListView.builder(
-                itemCount: dailyForecast.length,
-                itemBuilder: (context, index) {
-                  final weather = dailyForecast[index];
-                  return Card(
-                    child: Container(
-                      child: Column(
-                        children: [
-                          Text(
-                            '${weather.time?.toLocal().toString().split(' ')[0]}',
-                          ),
-                          Text('${weather.temperature}°C'),
-                          Text(weather.condition),
-                          Image.asset(
-                            // contain image
-                            getWeatherImages(weather.condition),
-                            width: 30,
-                            height: 30,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+              SizedBox(height: 20),
+              // buttons to switch daily or hourly
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        showHourly = true;
+                      });
+                    },
+                    child: Text('Hourly'),
+                  ),
+                  SizedBox(width: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        showHourly = false;
+                      });
+                    },
+                    child: Text('Daily'),
+                  ),
+                ],
               ),
-            ),
-          ],
+              SizedBox(height: 20),
+              // Forecast Lists
+              Expanded(
+                child: ListView.builder(
+                  itemCount:
+                      showHourly ? hourlyForecast.length : dailyForecast.length,
+                  itemBuilder: (context, index) {
+                    final weather =
+                        showHourly
+                            ? hourlyForecast[index]
+                            : dailyForecast[index];
+                    final date =
+                        showHourly
+                            ? '${weather.time?.hour}:00'
+                            : weather.time?.toLocal().toString().split(
+                                  ' ',
+                                )[0] ??
+                                '';
+                    return Card(
+                      child: Container(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(date),
+                                  Text(weather.condition),
+                                  Text('${weather.temperature ?? ' '}°C'),
+                                  Text('Humidity: ${weather.humidity ?? ' '}%'),
+                                  Text('Wind: ${weather.windSpeed ?? ' '}m/s'),
+                                ],
+                              ),
+                            ),
+                            Image.asset(
+                              // contain image
+                              getWeatherImages(weather.condition),
+                              width: 80,
+                              height: 50,
+                              fit: BoxFit.contain,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
