@@ -15,6 +15,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   // Theme
   String? _selectTheme;
+  // for changing background image
+  String? _backgroundImage = 'assets/happy.jpg';
 
   // alert
   bool _rainAlert = false; // initially false
@@ -77,54 +79,97 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text("Settings"),
         backgroundColor: Colors.yellowAccent,
       ),
-      body: Column(
-        children: [
-          SwitchListTile(
-            // rain
-            title: Text("Rain Alert"),
-            value: _rainAlert,
-            onChanged: (val) {
-              setState(() {
-                _rainAlert = val;
-              });
-            },
-          ),
-          SizedBox(height: 20),
-          SwitchListTile(
-            // snow
-            title: Text("Snow Alert"),
-            value: _snowAlert,
-            onChanged: (val) {
-              setState(() {
-                _snowAlert = val;
-              });
-            },
-          ),
-          SizedBox(height: 20),
-          // temperature using slide
-          ListTile(
-            title: Text(
-              'Temperature : ${_temperatureThreshold.toStringAsFixed(2)} °C',
-            ),
-            subtitle: Slider(
-              min: -100,
-              max: 100,
-              divisions: 200,
-              value: _temperatureThreshold,
-              onChanged: (double value) {
+      body: Container(
+        decoration: BoxDecoration(
+          image:
+              _backgroundImage !=
+                      null // while background image is not null
+                  ? DecorationImage(
+                    image: AssetImage(_backgroundImage!), // use backgroundImage
+                    fit: BoxFit.cover,
+                  )
+                  : null,
+        ),
+        child: Column(
+          children: [
+            SwitchListTile(
+              // rain
+              title: Text("Rain Alert"),
+              value: _rainAlert,
+              onChanged: (val) {
                 setState(() {
-                  _temperatureThreshold = value;
+                  _rainAlert = val;
                 });
               },
             ),
-          ),
-          SizedBox(height: 20),
-          // update
-          ElevatedButton(
-            onPressed: _updateAlert,
-            child: Text('Update Changed Settings'),
-          ),
-        ],
+            SizedBox(height: 20),
+            SwitchListTile(
+              // snow
+              title: Text("Snow Alert"),
+              value: _snowAlert,
+              onChanged: (val) {
+                setState(() {
+                  _snowAlert = val;
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            // temperature using slide
+            ListTile(
+              title: Text(
+                'Temperature : ${_temperatureThreshold.toStringAsFixed(2)} °C',
+              ),
+              subtitle: Slider(
+                min: -100,
+                max: 100,
+                divisions: 200,
+                value: _temperatureThreshold,
+                onChanged: (double value) {
+                  setState(() {
+                    _temperatureThreshold = value;
+                  });
+                },
+              ),
+            ),
+            SizedBox(height: 20),
+            // update
+            ElevatedButton(
+              onPressed: _updateAlert,
+              child: Text('Update Changed Settings'),
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _backgroundImage = 'assets/happy.jpg';
+                    });
+                  },
+                  child: Text('Happy'),
+                ),
+                SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _backgroundImage = 'assets/sad.jpg';
+                    });
+                  },
+                  child: Text('Sad'),
+                ),
+                SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _backgroundImage = 'assets/angry.jpg';
+                    });
+                  },
+                  child: Text('Angry'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
