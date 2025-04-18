@@ -76,16 +76,24 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Weather App')),
+      appBar: AppBar(title: Text('Weather App'), backgroundColor: Colors.green),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Container(
-              child: Center(
-                child: Text(location, style: TextStyle(fontSize: 25)),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Text(
+                    location.isNotEmpty
+                        ? 'Your location is: $location'
+                        : 'Please enter your location!',
+                    style: TextStyle(fontSize: 25),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
             SizedBox(height: 20),
@@ -115,24 +123,27 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (latitude.isNotEmpty && longitude.isNotEmpty) {
-                  //pass longitude and latitude
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ForecastScreen(
-                            latitude: latitude,
-                            longitude: longitude,
-                            locationName: location,
-                          ),
-                    ),
-                  );
-                }
-              },
-              child: Text('Forecast'),
+            SizedBox(
+              width: double.infinity, // as wide as possible
+              child: ElevatedButton(
+                onPressed: () {
+                  if (latitude.isNotEmpty && longitude.isNotEmpty) {
+                    //pass longitude and latitude
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => ForecastScreen(
+                              latitude: latitude,
+                              longitude: longitude,
+                              locationName: location,
+                            ),
+                      ),
+                    );
+                  }
+                },
+                child: Text('Forecast'),
+              ),
             ),
           ],
         ),

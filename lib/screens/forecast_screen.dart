@@ -93,7 +93,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Forecast")),
+      appBar: AppBar(
+        title: Text("Forecast"),
+        backgroundColor: Colors.lightBlueAccent,
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
