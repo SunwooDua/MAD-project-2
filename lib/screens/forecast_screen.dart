@@ -48,6 +48,42 @@ class _ForecastScreenState extends State<ForecastScreen> {
     }
   }
 
+  // group weather
+  String groupWeather(String condition) {
+    final g =
+        condition
+            .toLowerCase(); // g as group , lowercase so there is no missing
+
+    if (g.contains('sun') || g.contains('clear'))
+      return 'sunny'; // if weather contians sun or clear return sunny
+    if (g.contains('cloud'))
+      return 'cloudy'; // if weather conatins cloud return cloudy
+    if (g.contains('snow'))
+      return 'snowy'; // if weather conatins snow return snowy
+    if (g.contains('rain') || g.contains('drizzle'))
+      return 'rainy'; // if weather conatins rain or drizzle return rainy
+    else {
+      return 'cloudy'; // rest are atomoshphere that related to cloudy
+    }
+  }
+
+  // selecting appropriate weather image
+  String getWeatherImages(String condition) {
+    switch (groupWeather(condition)) {
+      // switch depending on its group
+      case 'sunny':
+        return 'assets/sunny.png';
+      case 'cloudy':
+        return 'assets/cloudy.png';
+      case 'snowy':
+        return 'assets/snowy.png';
+      case 'rainy':
+        return 'assets/rainy.png';
+      default:
+        return 'assets/cloudy.png';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +113,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
                           Text('${weather.time?.hour}:00'),
                           Text('${weather.temperature}°C'),
                           Text(weather.condition),
+                          Image.asset(
+                            // contain image
+                            getWeatherImages(weather.condition),
+                            width: 30,
+                            height: 30,
+                          ),
                         ],
                       ),
                     ),
@@ -100,6 +142,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
                           ),
                           Text('${weather.temperature}°C'),
                           Text(weather.condition),
+                          Image.asset(
+                            // contain image
+                            getWeatherImages(weather.condition),
+                            width: 30,
+                            height: 30,
+                          ),
                         ],
                       ),
                     ),
