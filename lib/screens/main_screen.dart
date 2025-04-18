@@ -33,15 +33,85 @@ class _MainScreenState extends State<MainScreen> {
     // get token
     String? token = await FirebaseMessaging.instance.getToken();
 
-    // foreground
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("Notification recived:  ${message.notification?.title}");
+    // fetch settings
+    FirebaseFirestore.instance
+        .collection('settings')
+        .doc('default')
+        .snapshots()
+        .listen((settingsDoc) {
+          Map<String, dynamic> alertSettings = {};
+          if (settingsDoc.exists) {
+            alertSettings = settingsDoc.data() as Map<String, dynamic>;
+          }
+          // foreground
+          FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+            _handleNotification(
+              message,
+              alertSettings,
+            ); // to update settings live
+          });
+        });
+  }
 
+  void _handleNotification(
+    RemoteMessage message,
+    Map<String, dynamic> alertSettings,
+  ) {
+    print("Notification recived: ${message.notification?.title}");
+
+    // save title as lowercase to decide wether to show or not show the msg
+    String title = message.notification?.title?.toLowerCase() ?? 'no title';
+    // for temperature
+    String body = message.notification?.body?.toLowerCase() ?? "no body";
+    RegExp reg = RegExp(
+      r'-?\d+(\.\d+)?',
+    ); // reg ex -? for optional negative, d+ for one or more digit number, (\.\d+ for decimal)
+    Match? match = reg.firstMatch(
+      body,
+    ); // find what matches above reg expression
+    double? temp =
+        match != null
+            ? double.tryParse(match.group(0)!)
+            : null; // if match is not null pick first matched as temp
+
+    // condition to decide display msg or not
+    bool showMessage = false;
+
+    // logic to decide
+    if (title.contains('rain') && alertSettings['alerts']['rain'] == true) {
+      showMessage = true;
+    }
+    if (title.contains('snow') && alertSettings['alerts']['snow'] == true) {
+      showMessage = true;
+    }
+    if (title.contains('high') && temp != null) {
+      double setTemp =
+          alertSettings['alerts']['temperature'] ??
+          0; // save temperature Threshold setting
+      if (setTemp < temp) {
+        showMessage =
+            true; // when high temp warning, only show when temp is higher
+      }
+    }
+    if (title.contains('low') && temp != null) {
+      double setTemp =
+          alertSettings['alerts']['temperature'] ??
+          0; // save temperature Threshold setting
+      if (setTemp > temp) {
+        showMessage = true; // when low temp warning, only show when temp is low
+      }
+    }
+
+    if (showMessage == true) {
       _showMsgDialog(
         message.notification!.title ?? "No Title",
         message.notification!.body ?? "No Body",
       );
-    });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Notification filtered out based on settings')),
+      );
+    }
   }
 
   // display nofitication
