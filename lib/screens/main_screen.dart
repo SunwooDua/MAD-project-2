@@ -3,6 +3,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:project2/screens/forecast_screen.dart';
 import 'package:project2/screens/settings_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,6 +18,51 @@ class _MainScreenState extends State<MainScreen> {
   String location = '';
   String longitude = '';
   String latitude = '';
+
+  // initialize fcm
+  @override
+  void initState() {
+    super.initState();
+    _initFirebaseMsg();
+  }
+
+  Future<void> _initFirebaseMsg() async {
+    // ask for permission
+    await FirebaseMessaging.instance.requestPermission();
+
+    // get token
+    String? token = await FirebaseMessaging.instance.getToken();
+
+    // foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print("Notification recived:  ${message.notification?.title}");
+
+      _showMsgDialog(
+        message.notification!.title ?? "No Title",
+        message.notification!.body ?? "No Body",
+      );
+    });
+  }
+
+  // display nofitication
+  void _showMsgDialog(String title, String body) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: Text(title),
+            content: Text(body),
+            actions: [
+              TextButton(
+                child: Text("Ok"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+    );
+  }
 
   Future<void> _getCurrentPosition() async {
     LocationPermission permission =
