@@ -41,8 +41,9 @@ dependencies:
   cloud_firestore: 
   firebase_core:
   firebase_messaging:
-  flutter_local_notifications:
   shared_preferences:
+  image_picker:
+  permission_handler:
 
 dev_dependencies:
   flutter_test:

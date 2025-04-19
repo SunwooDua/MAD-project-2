@@ -4,6 +4,9 @@ import 'package:project2/models/weathers.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -26,6 +29,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // load alert setting
     super.initState();
     _loadAlert();
+  }
+
+  // pick image from gallery
+  Future<void> _pickImage() async {
+    var status = await Permission.photos.request(); // get permission
+
+    if (status.isGranted) {
+      final pickedimage = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
+      if (pickedimage != null) {
+        setState(() {
+          backgroundImage = pickedimage.path; // update backgroundImage
+        });
+        _updateAlert();
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('No image selected.')));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Permission to access photos denied.')),
+      );
+    }
   }
 
   // load alert function
@@ -84,7 +112,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               backgroundImage !=
                       null // while background image is not null
                   ? DecorationImage(
-                    image: AssetImage(backgroundImage!), // use backgroundImage
+                    image:
+                        backgroundImage!.startsWith('assets')
+                            ? AssetImage(backgroundImage!)
+                            : FileImage(
+                              File(backgroundImage!),
+                            ), // use backgroundImage
                     fit: BoxFit.cover,
                   )
                   : null,
@@ -177,6 +210,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                   child: Text('Angry'),
                 ),
+                SizedBox(width: 20),
+                ElevatedButton(onPressed: _pickImage, child: Text('Upload')),
               ],
             ),
           ],

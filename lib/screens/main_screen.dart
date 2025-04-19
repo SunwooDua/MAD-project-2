@@ -5,6 +5,7 @@ import 'package:project2/screens/forecast_screen.dart';
 import 'package:project2/screens/settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -230,7 +231,12 @@ class _MainScreenState extends State<MainScreen> {
               backgroundImage !=
                       null // while background image is not null
                   ? DecorationImage(
-                    image: AssetImage(backgroundImage!), // use backgroundImage
+                    image:
+                        backgroundImage!.startsWith('assets')
+                            ? AssetImage(backgroundImage!)
+                            : FileImage(
+                              File(backgroundImage!),
+                            ), // use backgroundImage
                     fit: BoxFit.cover,
                   )
                   : null,
