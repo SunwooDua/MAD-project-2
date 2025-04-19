@@ -13,10 +13,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Theme
-  String? _selectTheme;
   // for changing background image
-  String? _backgroundImage = 'assets/happy.jpg';
+  String? backgroundImage;
 
   // alert
   bool _rainAlert = false; // initially false
@@ -52,6 +50,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _rainAlert = alert['rain'] ?? false;
         _snowAlert = alert['snow'] ?? false;
         _temperatureThreshold = (alert['temperature'] ?? 50).toDouble();
+
+        // load background image
+        backgroundImage = data['theme']['backgroundImage'] ?? null;
       });
     }
   }
@@ -65,6 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'snow': _snowAlert,
         'temperature': _temperatureThreshold,
       },
+      'theme': {'backgroundImage': backgroundImage ?? ''}, // save theme as well
     }, SetOptions(merge: true)); // only change data mentioned above to true!
 
     ScaffoldMessenger.of(
@@ -82,53 +84,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: Container(
         decoration: BoxDecoration(
           image:
-              _backgroundImage !=
+              backgroundImage !=
                       null // while background image is not null
                   ? DecorationImage(
-                    image: AssetImage(_backgroundImage!), // use backgroundImage
+                    image: AssetImage(backgroundImage!), // use backgroundImage
                     fit: BoxFit.cover,
                   )
                   : null,
         ),
         child: Column(
           children: [
-            SwitchListTile(
-              // rain
-              title: Text("Rain Alert"),
-              value: _rainAlert,
-              onChanged: (val) {
-                setState(() {
-                  _rainAlert = val;
-                });
-              },
-            ),
-            SizedBox(height: 20),
-            SwitchListTile(
-              // snow
-              title: Text("Snow Alert"),
-              value: _snowAlert,
-              onChanged: (val) {
-                setState(() {
-                  _snowAlert = val;
-                });
-              },
-            ),
-            SizedBox(height: 20),
-            // temperature using slide
-            ListTile(
-              title: Text(
-                'Temperature : ${_temperatureThreshold.toStringAsFixed(2)} °C',
-              ),
-              subtitle: Slider(
-                min: -100,
-                max: 100,
-                divisions: 200,
-                value: _temperatureThreshold,
-                onChanged: (double value) {
+            Container(
+              color: Colors.white.withAlpha(
+                200,
+              ), //  so text can be seen with darker background image
+              child: SwitchListTile(
+                // rain
+                title: Text("Rain Alert"),
+                value: _rainAlert,
+                onChanged: (val) {
                   setState(() {
-                    _temperatureThreshold = value;
+                    _rainAlert = val;
                   });
                 },
+              ),
+            ),
+            Container(
+              color: Colors.white.withAlpha(200),
+              child: SwitchListTile(
+                // snow
+                title: Text("Snow Alert"),
+                value: _snowAlert,
+                onChanged: (val) {
+                  setState(() {
+                    _snowAlert = val;
+                  });
+                },
+              ),
+            ),
+            // temperature using slide
+            Container(
+              color: Colors.white.withAlpha(200),
+              child: ListTile(
+                title: Text(
+                  'Temperature : ${_temperatureThreshold.toStringAsFixed(2)} °C',
+                ),
+                subtitle: Slider(
+                  min: -100,
+                  max: 100,
+                  divisions: 200,
+                  value: _temperatureThreshold,
+                  onChanged: (double value) {
+                    setState(() {
+                      _temperatureThreshold = value;
+                    });
+                  },
+                ),
               ),
             ),
             SizedBox(height: 20),
@@ -143,8 +154,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _backgroundImage = 'assets/happy.jpg';
+                      backgroundImage = 'assets/happy.jpg';
                     });
+                    _updateAlert(); // auto update
                   },
                   child: Text('Happy'),
                 ),
@@ -152,8 +164,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _backgroundImage = 'assets/sad.jpg';
+                      backgroundImage = 'assets/sad.jpg';
                     });
+                    _updateAlert(); // auto update
                   },
                   child: Text('Sad'),
                 ),
@@ -161,8 +174,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _backgroundImage = 'assets/angry.jpg';
+                      backgroundImage = 'assets/angry.jpg';
                     });
+                    _updateAlert(); // auto update
                   },
                   child: Text('Angry'),
                 ),
