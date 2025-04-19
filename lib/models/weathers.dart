@@ -29,19 +29,4 @@ class Weather {
       ), // 1000 mili is one sec
     );
   }
-
-  // daily
-  factory Weather.fromDailyJson(Map<String, dynamic> json) {
-    // decode
-    return Weather(
-      // correctly convert what we recive from api
-      temperature: json['temp']['day'].toDouble(),
-      condition: json['weather'][0]['description'],
-      humidity: json['humidity'],
-      windSpeed: json['wind']['speed'].toDouble(),
-      time: DateTime.fromMillisecondsSinceEpoch(
-        json['dt'] * 1000,
-      ), // 1000 mili is one sec
-    );
-  }
 }
