@@ -30,9 +30,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // load alert function
   Future<void> _loadAlert() async {
-    // get toekn for FCM
-    String? token = await FirebaseMessaging.instance.getToken();
-
     // just to simplify
     DocumentSnapshot doc =
         await FirebaseFirestore.instance

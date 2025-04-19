@@ -18,12 +18,32 @@ class _MainScreenState extends State<MainScreen> {
   String location = '';
   String longitude = '';
   String latitude = '';
+  String? backgroundImage;
 
   // initialize fcm
   @override
   void initState() {
     super.initState();
     _initFirebaseMsg();
+    _loadBackground(); // for background
+  }
+
+  // load background
+  Future<void> _loadBackground() async {
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance
+            .collection('settings')
+            .doc('default')
+            .get();
+
+    // only when doc exist
+    if (doc.exists) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      setState(() {
+        // load background image
+        backgroundImage = data['theme']['backgroundImage'] ?? null;
+      });
+    }
   }
 
   Future<void> _initFirebaseMsg() async {
@@ -194,88 +214,113 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Weather App'), backgroundColor: Colors.green),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Center(
-                  child: Text(
-                    location.isNotEmpty
-                        ? 'Your location is: $location'
-                        : 'Please enter your location!',
-                    style: TextStyle(fontSize: 25),
-                    textAlign: TextAlign.center,
+      appBar: AppBar(
+        title: Text('Weather App'),
+        backgroundColor: Colors.green,
+        actions: [
+          IconButton(
+            onPressed: _loadBackground,
+            icon: Icon(Icons.update),
+          ), // refresh
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image:
+              backgroundImage !=
+                      null // while background image is not null
+                  ? DecorationImage(
+                    image: AssetImage(backgroundImage!), // use backgroundImage
+                    fit: BoxFit.cover,
+                  )
+                  : null,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                color: Colors.white.withAlpha(200),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Text(
+                      location.isNotEmpty
+                          ? 'Your location is: $location'
+                          : 'Please enter your location!',
+                      style: TextStyle(fontSize: 25),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _locationController,
-              decoration: InputDecoration(
-                labelText: 'Enter your location',
-                border: OutlineInputBorder(), // border
-                suffixIcon: IconButton(
-                  // button to enter location
-                  onPressed: () {
-                    //update location manually when push button
-                    setState(() {
-                      final address = _locationController.text;
-                      _convertAddress(address);
-                    });
-                  },
-                  icon: Icon(Icons.add_location),
+              SizedBox(height: 20),
+              Container(
+                color: Colors.white.withAlpha(200),
+                child: TextField(
+                  controller: _locationController,
+                  decoration: InputDecoration(
+                    labelText: 'Enter your location',
+                    border: OutlineInputBorder(), // border
+                    suffixIcon: IconButton(
+                      // button to enter location
+                      onPressed: () {
+                        //update location manually when push button
+                        setState(() {
+                          final address = _locationController.text;
+                          _convertAddress(address);
+                        });
+                      },
+                      icon: Icon(Icons.add_location),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                onPressed: _getCurrentPosition,
-                child: Text('Auto-detect Location'),
+              SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _getCurrentPosition,
+                  child: Text('Auto-detect Location'),
+                ),
               ),
-            ),
-            SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity, // as wide as possible
-              child: ElevatedButton(
-                onPressed: () {
-                  if (latitude.isNotEmpty && longitude.isNotEmpty) {
-                    //pass longitude and latitude
+              SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity, // as wide as possible
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (latitude.isNotEmpty && longitude.isNotEmpty) {
+                      //pass longitude and latitude
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ForecastScreen(
+                                latitude: latitude,
+                                longitude: longitude,
+                                locationName: location,
+                              ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text('Forecast'),
+                ),
+              ),
+              SizedBox(
+                width: double.infinity, // as wide as possible
+                child: ElevatedButton(
+                  onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => ForecastScreen(
-                              latitude: latitude,
-                              longitude: longitude,
-                              locationName: location,
-                            ),
-                      ),
+                      MaterialPageRoute(builder: (context) => SettingsScreen()),
                     );
-                  }
-                },
-                child: Text('Forecast'),
+                  },
+                  child: Text('Settings'),
+                ),
               ),
-            ),
-            SizedBox(
-              width: double.infinity, // as wide as possible
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SettingsScreen()),
-                  );
-                },
-                child: Text('Settings'),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
