@@ -37,6 +37,13 @@ dependencies:
   cupertino_icons: ^1.0.8
   geolocator: ^14.0.0
   geocoding: ^3.0.0
+  firebase_storage:
+  cloud_firestore: 
+  firebase_core:
+  firebase_messaging:
+  shared_preferences:
+  image_picker:
+  permission_handler:
 
 dev_dependencies:
   flutter_test:

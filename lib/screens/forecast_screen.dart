@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:project2/services/api_service.dart';
 import 'package:project2/models/weathers.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:project2/screens/forecast_screen.dart';
+import 'package:project2/screens/settings_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io';
 
 class ForecastScreen extends StatefulWidget {
   final String latitude;
@@ -23,6 +30,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
   List<Weather> hourlyForecast = [];
   List<Weather> dailyForecast = [];
   bool showHourly = true; // default is to show hourly forecast
+  String? backgroundImage;
 
   // fetch weather
   _fetchWeather() async {
@@ -89,6 +97,25 @@ class _ForecastScreenState extends State<ForecastScreen> {
   void initState() {
     super.initState();
     _fetchWeather();
+    _loadBackground(); // for background
+  }
+
+  // load background
+  Future<void> _loadBackground() async {
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance
+            .collection('settings')
+            .doc('default')
+            .get();
+
+    // only when doc exist
+    if (doc.exists) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      setState(() {
+        // load background image
+        backgroundImage = data['theme']['backgroundImage'] ?? null;
+      });
+    }
   }
 
   Widget build(BuildContext context) {
@@ -97,90 +124,120 @@ class _ForecastScreenState extends State<ForecastScreen> {
         title: Text("Forecast"),
         backgroundColor: Colors.lightBlueAccent,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Location : ${widget.locationName}'),
-              Text(
-                '${showHourly ? "Hourly" : "Daily"} Forecast : ${DateTime.now().toLocal().toString().split(' ')[0]}', // only show date no time
-              ),
-              SizedBox(height: 20),
-              // buttons to switch daily or hourly
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        showHourly = true;
-                      });
-                    },
-                    child: Text('Hourly'),
-                  ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        showHourly = false;
-                      });
-                    },
-                    child: Text('Daily'),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20),
-              // Forecast Lists
-              Expanded(
-                child: ListView.builder(
-                  itemCount:
-                      showHourly ? hourlyForecast.length : dailyForecast.length,
-                  itemBuilder: (context, index) {
-                    final weather =
-                        showHourly
-                            ? hourlyForecast[index]
-                            : dailyForecast[index];
-                    final date =
-                        showHourly
-                            ? '${weather.time?.hour}:00'
-                            : weather.time?.toLocal().toString().split(
-                                  ' ',
-                                )[0] ??
-                                '';
-                    return Card(
-                      child: Container(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(date),
-                                  Text(weather.condition),
-                                  Text('${weather.temperature ?? ' '}°C'),
-                                  Text('Humidity: ${weather.humidity ?? ' '}%'),
-                                  Text('Wind: ${weather.windSpeed ?? ' '}m/s'),
-                                ],
-                              ),
-                            ),
-                            Image.asset(
-                              // contain image
-                              getWeatherImages(weather.condition),
-                              width: 80,
-                              height: 50,
-                              fit: BoxFit.contain,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+      body: Container(
+        decoration: BoxDecoration(
+          image:
+              backgroundImage !=
+                      null // while background image is not null
+                  ? DecorationImage(
+                    image:
+                        backgroundImage!.startsWith('assets')
+                            ? AssetImage(backgroundImage!)
+                            : FileImage(
+                              File(backgroundImage!),
+                            ), // use backgroundImage
+                    fit: BoxFit.cover,
+                  )
+                  : null,
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  color: Colors.white.withAlpha(200),
+                  child: Text('Location : ${widget.locationName}'),
                 ),
-              ),
-            ],
+                Container(
+                  color: Colors.white.withAlpha(200),
+
+                  child: Text(
+                    '${showHourly ? "Hourly" : "Daily"} Forecast : ${DateTime.now().toLocal().toString().split(' ')[0]}', // only show date no time
+                  ),
+                ),
+                SizedBox(height: 20),
+                // buttons to switch daily or hourly
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          showHourly = true;
+                        });
+                      },
+                      child: Text('Hourly'),
+                    ),
+                    SizedBox(width: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          showHourly = false;
+                        });
+                      },
+                      child: Text('Daily'),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                // Forecast Lists
+                Expanded(
+                  child: ListView.builder(
+                    itemCount:
+                        showHourly
+                            ? hourlyForecast.length
+                            : dailyForecast.length,
+                    itemBuilder: (context, index) {
+                      final weather =
+                          showHourly
+                              ? hourlyForecast[index]
+                              : dailyForecast[index];
+                      final date =
+                          showHourly
+                              ? '${weather.time?.hour}:00'
+                              : weather.time?.toLocal().toString().split(
+                                    ' ',
+                                  )[0] ??
+                                  '';
+                      return Card(
+                        child: Container(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(date),
+                                    Text(weather.condition),
+                                    Text('${weather.temperature ?? ' '}°C'),
+                                    Text(
+                                      'Humidity: ${weather.humidity ?? ' '}%',
+                                    ),
+                                    Text(
+                                      'Wind: ${weather.windSpeed ?? ' '}m/s',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Image.asset(
+                                // contain image
+                                getWeatherImages(weather.condition),
+                                width: 80,
+                                height: 50,
+                                fit: BoxFit.contain,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
