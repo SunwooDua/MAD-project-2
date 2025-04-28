@@ -44,6 +44,9 @@ dependencies:
   shared_preferences:
   image_picker:
   permission_handler:
+  flutter_map: ^6.1.0
+  latlong2: 0.9.1
+
 
 dev_dependencies:
   flutter_test:

@@ -6,6 +6,7 @@ import 'package:project2/screens/settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io';
+import 'package:project2/screens/interactive_map.dart'; // ✅ NEW
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -21,15 +22,13 @@ class _MainScreenState extends State<MainScreen> {
   String latitude = '';
   String? backgroundImage;
 
-  // initialize fcm
   @override
   void initState() {
     super.initState();
     _initFirebaseMsg();
-    _loadBackground(); // for background
+    _loadBackground();
   }
 
-  // load background
   Future<void> _loadBackground() async {
     DocumentSnapshot doc =
         await FirebaseFirestore.instance
@@ -37,24 +36,18 @@ class _MainScreenState extends State<MainScreen> {
             .doc('default')
             .get();
 
-    // only when doc exist
     if (doc.exists) {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       setState(() {
-        // load background image
         backgroundImage = data['theme']['backgroundImage'] ?? null;
       });
     }
   }
 
   Future<void> _initFirebaseMsg() async {
-    // ask for permission
     await FirebaseMessaging.instance.requestPermission();
-
-    // get token
     String? token = await FirebaseMessaging.instance.getToken();
 
-    // fetch settings
     FirebaseFirestore.instance
         .collection('settings')
         .doc('default')
@@ -64,12 +57,8 @@ class _MainScreenState extends State<MainScreen> {
           if (settingsDoc.exists) {
             alertSettings = settingsDoc.data() as Map<String, dynamic>;
           }
-          // foreground
           FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-            _handleNotification(
-              message,
-              alertSettings,
-            ); // to update settings live
+            _handleNotification(message, alertSettings);
           });
         });
   }
@@ -78,52 +67,28 @@ class _MainScreenState extends State<MainScreen> {
     RemoteMessage message,
     Map<String, dynamic> alertSettings,
   ) {
-    print("Notification recived: ${message.notification?.title}");
-
-    // save title as lowercase to decide wether to show or not show the msg
     String title = message.notification?.title?.toLowerCase() ?? 'no title';
-    // for temperature
-    String body = message.notification?.body?.toLowerCase() ?? "no body";
-    RegExp reg = RegExp(
-      r'-?\d+(\.\d+)?',
-    ); // reg ex -? for optional negative, d+ for one or more digit number, (\.\d+ for decimal)
-    Match? match = reg.firstMatch(
-      body,
-    ); // find what matches above reg expression
-    double? temp =
-        match != null
-            ? double.tryParse(match.group(0)!)
-            : null; // if match is not null pick first matched as temp
+    String body = message.notification?.body?.toLowerCase() ?? 'no body';
+    RegExp reg = RegExp(r'-?\d+(\.\d+)?');
+    Match? match = reg.firstMatch(body);
+    double? temp = match != null ? double.tryParse(match.group(0)!) : null;
 
-    // condition to decide display msg or not
     bool showMessage = false;
 
-    // logic to decide
-    if (title.contains('rain') && alertSettings['alerts']['rain'] == true) {
+    if (title.contains('rain') && alertSettings['alerts']['rain'] == true)
       showMessage = true;
-    }
-    if (title.contains('snow') && alertSettings['alerts']['snow'] == true) {
+    if (title.contains('snow') && alertSettings['alerts']['snow'] == true)
       showMessage = true;
-    }
     if (title.contains('high') && temp != null) {
-      double setTemp =
-          alertSettings['alerts']['temperature'] ??
-          0; // save temperature Threshold setting
-      if (setTemp < temp) {
-        showMessage =
-            true; // when high temp warning, only show when temp is higher
-      }
+      double setTemp = alertSettings['alerts']['temperature'] ?? 0;
+      if (setTemp < temp) showMessage = true;
     }
     if (title.contains('low') && temp != null) {
-      double setTemp =
-          alertSettings['alerts']['temperature'] ??
-          0; // save temperature Threshold setting
-      if (setTemp > temp) {
-        showMessage = true; // when low temp warning, only show when temp is low
-      }
+      double setTemp = alertSettings['alerts']['temperature'] ?? 0;
+      if (setTemp > temp) showMessage = true;
     }
 
-    if (showMessage == true) {
+    if (showMessage) {
       _showMsgDialog(
         message.notification!.title ?? "No Title",
         message.notification!.body ?? "No Body",
@@ -135,7 +100,6 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  // display nofitication
   void _showMsgDialog(String title, String body) {
     showDialog(
       context: context,
@@ -156,35 +120,25 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _getCurrentPosition() async {
-    LocationPermission permission =
-        await Geolocator.checkPermission(); // check permission
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      permission =
-          await Geolocator.requestPermission(); // if no permission ask for permission
+      permission = await Geolocator.requestPermission();
     }
 
     Position position = await Geolocator.getCurrentPosition(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.high,
-      ), // make it more accurate
+      locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
     );
 
-    // convert locations into placemarks
     List<Placemark> placemarks = await placemarkFromCoordinates(
       position.latitude,
       position.longitude,
     );
 
-    // choose first of placemark
     Placemark place = placemarks[0];
-    // if null give empty
-    String city = place.locality ?? '';
-    String state = place.administrativeArea ?? '';
-    String country = place.country ?? '';
 
     setState(() {
-      location = '$city, $state, $country'; // update location
-      // pass latitude and longitude
+      location =
+          '${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
       latitude = position.latitude.toString();
       longitude = position.longitude.toString();
     });
@@ -197,16 +151,11 @@ class _MainScreenState extends State<MainScreen> {
       locations[0].longitude,
     );
 
-    // choose first of placemark
     Placemark place = placemarks[0];
-    // if null give empty
-    String city = place.locality ?? '';
-    String state = place.administrativeArea ?? '';
-    String country = place.country ?? '';
 
     setState(() {
-      location = '$city, $state, $country'; // update location
-      // since we captured address need to update lat and longt
+      location =
+          '${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
       latitude = locations[0].latitude.toString();
       longitude = locations[0].longitude.toString();
     });
@@ -219,24 +168,19 @@ class _MainScreenState extends State<MainScreen> {
         title: Text('Weather App'),
         backgroundColor: Colors.green,
         actions: [
-          IconButton(
-            onPressed: _loadBackground,
-            icon: Icon(Icons.update),
-          ), // refresh
+          IconButton(onPressed: _loadBackground, icon: Icon(Icons.update)),
         ],
       ),
       body: Container(
         decoration: BoxDecoration(
           image:
-              backgroundImage !=
-                      null // while background image is not null
+              backgroundImage != null
                   ? DecorationImage(
                     image:
                         backgroundImage!.startsWith('assets')
                             ? AssetImage(backgroundImage!)
-                            : FileImage(
-                              File(backgroundImage!),
-                            ), // use backgroundImage
+                            : FileImage(File(backgroundImage!))
+                                as ImageProvider,
                     fit: BoxFit.cover,
                   )
                   : null,
@@ -268,15 +212,11 @@ class _MainScreenState extends State<MainScreen> {
                   controller: _locationController,
                   decoration: InputDecoration(
                     labelText: 'Enter your location',
-                    border: OutlineInputBorder(), // border
+                    border: OutlineInputBorder(),
                     suffixIcon: IconButton(
-                      // button to enter location
                       onPressed: () {
-                        //update location manually when push button
-                        setState(() {
-                          final address = _locationController.text;
-                          _convertAddress(address);
-                        });
+                        final address = _locationController.text;
+                        _convertAddress(address);
                       },
                       icon: Icon(Icons.add_location),
                     ),
@@ -292,11 +232,10 @@ class _MainScreenState extends State<MainScreen> {
               ),
               SizedBox(height: 20),
               SizedBox(
-                width: double.infinity, // as wide as possible
+                width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
                     if (latitude.isNotEmpty && longitude.isNotEmpty) {
-                      //pass longitude and latitude
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -314,7 +253,7 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
               SizedBox(
-                width: double.infinity, // as wide as possible
+                width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(
@@ -323,6 +262,35 @@ class _MainScreenState extends State<MainScreen> {
                     );
                   },
                   child: Text('Settings'),
+                ),
+              ),
+              // ✅ NEW Interactive Map Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (latitude.isNotEmpty && longitude.isNotEmpty) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => InteractiveMapScreen(
+                                latitude: double.parse(latitude),
+                                longitude: double.parse(longitude),
+                              ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Please enter or detect a location first.',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text('Interactive Map'),
                 ),
               ),
             ],
