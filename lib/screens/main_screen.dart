@@ -6,7 +6,7 @@ import 'package:project2/screens/settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io';
-import 'package:project2/screens/interactive_map.dart'; // ✅ NEW
+import 'package:project2/screens/interactive_map.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -264,7 +264,7 @@ class _MainScreenState extends State<MainScreen> {
                   child: Text('Settings'),
                 ),
               ),
-              // ✅ NEW Interactive Map Button
+              // Interactive Map Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

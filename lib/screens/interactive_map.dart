@@ -17,17 +17,8 @@ class InteractiveMapScreen extends StatefulWidget {
 }
 
 class _InteractiveMapScreenState extends State<InteractiveMapScreen> {
-  String _mapType = 'radar';
-
+  String _mapType = 'radar'; // or 'satellite'
   final String apiKey = 'f276def9aa8fec1dab67ecf5b3b84378';
-
-  String _getTileUrl() {
-    if (_mapType == 'radar') {
-      return 'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=$apiKey';
-    } else {
-      return 'https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=$apiKey';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,22 +32,44 @@ class _InteractiveMapScreenState extends State<InteractiveMapScreen> {
       body: Stack(
         children: [
           FlutterMap(
-            options: MapOptions(center: center, zoom: 9.0),
+            options: MapOptions(center: center, zoom: 6.0),
             children: [
-              // Base map layer (OpenStreetMap)
+              // Base map layer
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    _mapType == 'satellite'
+                        ? 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.project2',
               ),
 
-              // Weather overlay with transparency
-              Opacity(
-                opacity: 0.7,
-                child: TileLayer(
-                  urlTemplate: _getTileUrl(),
+              // Esri place names on top of satellite
+              if (_mapType == 'satellite')
+                TileLayer(
+                  urlTemplate:
+                      'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
                   userAgentPackageName: 'com.example.project2',
                 ),
-              ),
+
+              // Weather overlay: radar or clouds
+              if (_mapType == 'radar')
+                Opacity(
+                  opacity: 0.6,
+                  child: TileLayer(
+                    urlTemplate:
+                        'https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=$apiKey',
+                    userAgentPackageName: 'com.example.project2',
+                  ),
+                )
+              else if (_mapType == 'satellite')
+                Opacity(
+                  opacity: 0.5,
+                  child: TileLayer(
+                    urlTemplate:
+                        'https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=$apiKey',
+                    userAgentPackageName: 'com.example.project2',
+                  ),
+                ),
             ],
           ),
 
