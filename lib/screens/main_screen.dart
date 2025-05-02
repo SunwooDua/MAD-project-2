@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io';
 import 'package:project2/screens/interactive_map.dart';
+import 'package:project2/screens/weather_community_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -291,6 +292,22 @@ class _MainScreenState extends State<MainScreen> {
                     }
                   },
                   child: Text('Interactive Map'),
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                WeatherCommunityScreen(location: location),
+                      ),
+                    );
+                  },
+                  child: Text('Community Reports'),
                 ),
               ),
             ],
